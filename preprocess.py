@@ -20,15 +20,11 @@ def get_data(train_file):
     # load and concatenate training data from training file.
     # read in and tokenize training data
 
-    with open(train_file, 'r') as f:
-        words = f.read().split()
-
-    vocab = set(" ".join(words).split())
-    word2id = {w: i for i, w in enumerate(list(vocab))}  # label encode
-
-    training_data = [word2id[x] for x in words]
-
+    with open(train_file) as train_text:
+        train_data = train_text.read().split()
+        vocabulary = {w: i for i, w in enumerate(list(set(train_data)))}
+    
+    train = [vocabulary[w] for w in train_data]
     # return tuple of training tokens, testing tokens, and the vocab dictionary.
-
 
     return training_data, word2id
