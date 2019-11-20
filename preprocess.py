@@ -27,4 +27,4 @@ def get_data(train_file):
     train = [vocabulary[w] for w in train_data]
     # return tuple of training tokens, testing tokens, and the vocab dictionary.
 
-    return training_data, word2id
+    return train, vocabulary
