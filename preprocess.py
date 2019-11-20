@@ -3,6 +3,13 @@ import numpy as np
 
 
 # reads .csv files and converts them into text files
+def csv2txt (csv_file):
+    csv_file = 
+    txt_file = 
+    with open(txt_file, "w") as my_output_file:
+        with open(csv_file, "r") as my_input_file:
+            [ my_output_file.write(" ".join(row)+'\n') for row in csv.reader(my_input_file)]
+        my_output_file.close()
 
 
 def get_data(train_file):
