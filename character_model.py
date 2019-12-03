@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tensorflow.keras.layers import Embedding, LSTM, Dense
 import numpy as np
 from preprocess import get_data
 
@@ -27,6 +28,9 @@ class Model(tf.keras.Model):
         # Note: You can now use tf.keras.layers!
         # - use tf.keras.layers.Dense for feed forward layers: https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
         # - and use tf.keras.layers.GRU or tf.keras.layers.LSTM for your RNN
+        
+        self.model = tf.keras.Sequential()
+        self.model.add(Dense())
 
         self.embedding = tf.keras.layers.Embedding(self.vocab_size, self.embedding_size, input_length=self.window_size)
         self.rnn = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True, return_state=True)
