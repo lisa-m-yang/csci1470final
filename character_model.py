@@ -30,7 +30,9 @@ class Model(tf.keras.Model):
         # - and use tf.keras.layers.GRU or tf.keras.layers.LSTM for your RNN
         
         self.model = tf.keras.Sequential()
-        self.model.add(Dense())
+        self.model.add(Embedding(self.vocab_size, self.embedding_size, batch_input_shape=[batch_size, None]))
+        self.model.add(GRU(self.rnn_size, return_sequences=True, stateful=True, recurrent_initializer='glorot_uniform'))
+        self.model.add(Dense(self.vocab_size))
 
         self.embedding = tf.keras.layers.Embedding(self.vocab_size, self.embedding_size, input_length=self.window_size)
         self.rnn = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True, return_state=True)
