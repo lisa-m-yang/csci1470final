@@ -13,7 +13,7 @@ class Model(tf.keras.Model):
     def __init__(self, vocab_size):
         super(Model, self).__init__()
         
-        # initialize vocab_size, emnbedding_size
+        # initialize vocab_size, embedding_size
 
         self.vocab_size = vocab_size
         self.window_size = 20
@@ -24,11 +24,8 @@ class Model(tf.keras.Model):
         self.dropout = tf.keras.layers.Dropout(0.2)
         self.encoder = tf.keras.layers.Embedding(self.vocab_size, self.embedding_size, input_length=self.window_size)
       
-        self.LSTM = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True, return_state=True)
-        
-        self.decoder = tf.keras.layers.Dense(self.vocab_size, activation='softmax') #[hiddensz, vocabsz]
-
-         
+        self.LSTM = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True, return_state=True)        
+        self.decoder = tf.keras.layers.Dense(self.vocab_size, activation='softmax') #[hiddensz, vocabsz]        
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
 
 
@@ -49,51 +46,88 @@ class Model(tf.keras.Model):
                     weight.new_zeros(self.nlayers, bsz, self.nhid))
         else:
             return weight.new_zeros(self.nlayers, bsz, self.nhid)
+        
+class Position_Encoding_Layer(tf.keras.layers.Layer):
+	def __init__(self, window_sz, emb_sz):
+		super(Position_Encoding_Layer, self).__init__()
+		self.positional_embeddings = self.add_weight("pos_embed",shape=[window_sz, emb_sz])
 
-# Temporarily leave PositionalEncoding module here. Will be moved somewhere else.
-class PositionalEncoding(nn.Module):
-    r"""Inject some information about the relative or absolute position of the tokens
-        in the sequence. The positional encodings have the same dimension as
-        the embeddings, so that the two can be summed. Here, we use sine and cosine
-        functions of different frequencies.
-    .. math::
-        \text{PosEncoder}(pos, 2i) = sin(pos/10000^(2i/d_model))
-        \text{PosEncoder}(pos, 2i+1) = cos(pos/10000^(2i/d_model))
-        \text{where pos is the word position and i is the embed idx)
-    Args:
-        d_model: the embed dim (required).
-        dropout: the dropout value (default=0.1).
-        max_len: the max. length of the incoming sequence (default=5000).
-    Examples:
-        >>> pos_encoder = PositionalEncoding(d_model)
-    """
+	@tf.function
+	def call(self, x):
+		"""
+		Adds positional embeddings to word embeddings.
 
-    def __init__(self, d_model, dropout=0.1, max_len=5000):
-        super(PositionalEncoding, self).__init__()
-        self.dropout = nn.Dropout(p=dropout)
+		:param x: [BATCH_SIZE x WINDOW_SIZE x EMBEDDING_SIZE ] the input embeddings fed to the encoder
+		:return: [BATCH_SIZE x WINDOW_SIZE x EMBEDDING_SIZE ] new word embeddings with added positional encodings
+		"""
+		return x+self.positional_embeddings
 
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0).transpose(0, 1)
-        self.register_buffer('pe', pe)
+class Transformer(tf.keras.Model):
+	def __init__(self, french_window_size, french_vocab_size, english_window_size, english_vocab_size):
 
-    def forward(self, x):
-        """Inputs of forward function
-        Args:
-            x: the sequence fed to the positional encoder model (required).
-        Shape:
-            x: [sequence length, batch size, embed dim]
-            output: [sequence length, batch size, embed dim]
-        Examples:
-            >>> output = pos_encoder(x)
-        """
+		######vvv DO NOT CHANGE vvv##################
+		super(Transformer, self).__init__()
 
-        x = x + self.pe[:x.size(0), :]
-        return self.dropout(x)
+		self.french_vocab_size = french_vocab_size # The size of the french vocab
+		self.english_vocab_size = english_vocab_size # The size of the english vocab
 
+		self.french_window_size = french_window_size # The french window size
+		self.english_window_size = english_window_size # The english window size
+		######^^^ DO NOT CHANGE ^^^##################
+        
+        # Define hyperparameters
+        self.batch_size = 100
+		self.embedding_size = 32
+		self.rnn_size = 256
+        # Define embeddings, encoder, decoder, and feed forward layers
+        self.E1 = tf.keras.layers.Embedding(self.french_vocab_size, self.embedding_size, input_length=self.french_window_size)
+		self.E2 = tf.keras.layers.Embedding(self.english_vocab_size, self.embedding_size, input_length=self.english_window_size)
+        self.enc_positional_encoding = transformer.Position_Encoding_Layer(self.french_window_size, self.embedding_size)
+		self.dec_positional_encoding = transformer.Position_Encoding_Layer(self.english_window_size, self.embedding_size)
+        
+        # TODO: Define encoder and decoder layers:
+		self.encoder = transformer.Transformer_Block(self.embedding_size,is_decoder=False,multi_headed=False)
+		self.decoder = transformer.Transformer_Block(self.embedding_size,is_decoder=True,multi_headed=False)
+
+		# Define dense layer(s)
+		self.Dense1 = tf.keras.layers.Dense(self.english_vocab_size, activation='softmax')
+
+		# Define optimizer
+		self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+        
+    @tf.function
+	def call(self, encoder_input, decoder_input):
+		"""
+		:param encoder_input: batched ids corresponding to french sentences
+		:param decoder_input: batched ids corresponding to english sentences
+		:return prbs: The 3d probabilities as a tensor, [batch_size x window_size x english_vocab_size]
+		"""
+
+		# TODO:
+		#1) Add the positional embeddings to french sentence embeddings
+		encoder_input = self.E1(encoder_input)
+		encoder_input = self.enc_positional_encoding(encoder_input)
+
+		#2) Pass the french sentence embeddings to the encoder
+		encoder_output = self.encoder(encoder_input)
+
+		#3) Add positional embeddings to the english sentence embeddings
+		decoder_input = self.E2(decoder_input)
+		decoder_input = self.dec_positional_encoding(decoder_input)
+
+		#4) Pass the english embeddings and output of your encoder, to the decoder
+		decoder_output = self.decoder(decoder_input, encoder_output)
+
+		#5) Apply dense layer(s) to the decoder out to generate probabilities
+		prbs = self.Dense1(decoder_output)
+		# prbs = self.Dense2(prbs)
+
+		return prbs
+
+
+        
+
+# ========= torch implementation ========== #
 class TransformerModel(nn.Module):
     """Container module with an encoder, a recurrent or transformer module, and a decoder."""
 
