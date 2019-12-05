@@ -13,7 +13,7 @@ class RNN_WORD_Model(tf.keras.Model):
     def __init__(self, vocab_size):
         super(Model, self).__init__()
         
-        # initialize vocab_size, embedding_size
+        # initialize hyperparamters
 
         self.vocab_size = vocab_size
         self.window_size = 20
@@ -44,21 +44,11 @@ class RNN_WORD_Model(tf.keras.Model):
 
     def init_hidden(self, bsz):
 		"""
-		Grab the first item produced by the generator self.parameters()
-		returning a Variable filled with zeros based on the data shape.
+		Return a Variable filled with zeros based on the data shape.
 		"""
-	# weight = getshape/variable
 	hidden = (tf.zeros_like(self.nlayers, self.batch_size, self.nhid),
 		tf.zeros_like(self.nlayers, self.batch_size, self.nhid))
 	return hidden
 		
-	# torch implementation
-        
-	weight = next(self.parameters())
-        if self.rnn_type == 'LSTM':
-            return (weight.new_zeros(self.nlayers, bsz, self.nhid),
-                    weight.new_zeros(self.nlayers, bsz, self.nhid))
-        else:
-            return weight.new_zeros(self.nlayers, bsz, self.nhid)
- 
+
 
