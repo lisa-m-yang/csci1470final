@@ -20,7 +20,8 @@ class RNNModel(tf.keras.Model):
         self.embedding_size = 650
         self.batch_size = 64
         self.rnn_size = 256
-	self.nlayer = 1
+	self.nlayer = 2
+	self.nhid = 650
         
         self.dropout = tf.keras.layers.Dropout(0.2)
         self.encoder = tf.keras.layers.Embedding(self.vocab_size, self.embedding_size, input_length=self.window_size)
