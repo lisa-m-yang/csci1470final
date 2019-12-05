@@ -6,14 +6,15 @@ def main():
 
 	print("Running preprocessing...")
 	# TODO: call preprocess function
-	train, vocab = get_data('data/fls.txt','data/els.txt','data/flt.txt','data/elt.txt')
+	train, vocab = get_data('FILEPATH')
 	print("Preprocessing complete.")
 
-	model_args = (FRENCH_WINDOW_SIZE,len(french_vocab),ENGLISH_WINDOW_SIZE, len(english_vocab))
-	if sys.argv[1] == "RNN":
-		model = RNN_Seq2Seq(*model_args)
-	elif sys.argv[1] == "TRANSFORMER":
-		model = Transformer_Seq2Seq(*model_args)
+	
+	model_args = (WINDOW_SIZE,len(vocab),WINDOW_SIZE, len(vocab)) # TODO: args = ?
+	if sys.argv[1] == "WORD":
+		model = RNN_WORD_MODEL(*model_args)
+	elif sys.argv[1] == "CHAR":
+		model = Transformer_Seq2Seq(*model_args) # TODO: model?
 
 
 	# TODO:
