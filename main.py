@@ -6,7 +6,7 @@ def main():
 
 	print("Running preprocessing...")
 	# TODO: call preprocess function
-	train_english,test_english, train_french,test_french, english_vocab,french_vocab,eng_padding_index = get_data('data/fls.txt','data/els.txt','data/flt.txt','data/elt.txt')
+	train, vocab = get_data('data/fls.txt','data/els.txt','data/flt.txt','data/elt.txt')
 	print("Preprocessing complete.")
 
 	model_args = (FRENCH_WINDOW_SIZE,len(french_vocab),ENGLISH_WINDOW_SIZE, len(english_vocab))
