@@ -5,7 +5,7 @@ from tensorflow.keras import Model
 from tensorflow.keras.layers import Dropout, Dense, Flatten, Conv2D, BatchNormalization, LeakyReLU, Reshape, Conv2DTranspose
 
 
-class RNNModel(tf.keras.Model):
+class RNN_WORD_Model(tf.keras.Model):
     """
     Container module with an encoder, a recurrent module, and a decoder.
     """
