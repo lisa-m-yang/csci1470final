@@ -30,18 +30,14 @@ class Model(tf.keras.Model):
         # - and use tf.keras.layers.GRU or tf.keras.layers.LSTM for your RNN
         
         self.model = tf.keras.Sequential()
-        self.model.add(Embedding(self.vocab_size, self.embedding_size, batch_input_shape=[batch_size, None]))
-        self.model.add(GRU(self.rnn_size, return_sequences=True, stateful=True, recurrent_initializer='glorot_uniform'))
-        self.model.add(Dense(self.vocab_size))
-
-        self.embedding = tf.keras.layers.Embedding(self.vocab_size, self.embedding_size, input_length=self.window_size)
-        self.rnn = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True, return_state=True)
-        self.dense = tf.keras.layers.Dense(self.vocab_size, activation='softmax')
+        self.model.add(Embedding(self.vocab_size, self.embedding_size, input_length=self.window_size))
+        self.model.add(LSTM(self.rnn_size, return_sequences=True, stateful=True))
+        self.model.add(Dense(self.vocab_size, activation='softmax'))
 
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
 
 
-    def call(self, inputs, initial_state):
+    def call(self, inputs, initial_state=None):
         """
         - You must use an embedding layer as the first layer of your network (i.e. tf.nn.embedding_lookup)
         - You must use an LSTM or GRU as the next layer.
@@ -55,8 +51,7 @@ class Model(tf.keras.Model):
 
         -Note 2: You only need to use the initial state during generation. During training and testing it can be None.
         """
-        inputs = tf.convert_to_tensor(inputs)
-
+        
         embedding_output = self.embedding(inputs)
 
         output, state1, state2 = self.rnn(embedding_output, initial_state=initial_state)
@@ -77,7 +72,7 @@ class Model(tf.keras.Model):
         #We recommend using tf.keras.losses.sparse_categorical_crossentropy
         #https://www.tensorflow.org/api_docs/python/tf/keras/losses/sparse_categorical_crossentropy
 
-        return tf.reduce_mean(tf.keras.losses.sparse_categorical_crossentropy(labels, logits))
+        return tf.reduce_sum(tf.boolean_mask(tf.keras.losses.sparse_categorical_crossentropy(labels, prbs), mask))
 
 def train(model, train_inputs, train_labels):
     """
@@ -89,20 +84,15 @@ def train(model, train_inputs, train_labels):
     :return: None
     """
     num_inputs = len(train_inputs)
-    batch_inputs = (model.batch_size * model.window_size)
-    num_batches = int(num_inputs/batch_inputs)
-    indices = tf.range(num_inputs)
-    tf.random.shuffle(indices)
-    tf.gather(train_inputs, indices)
-    tf.gather(train_labels, indices)
-    for i in range(num_batches):
-        train_x_batch = np.reshape(train_inputs[i*batch_inputs:(i+1)*batch_inputs], [model.batch_size, model.window_size])
-        train_y_batch = np.reshape(train_labels[i*batch_inputs:(i+1)*batch_inputs], [model.batch_size, model.window_size])
-        with tf.GradientTape() as tape:
-            logits, _ = model.call(train_x_batch, None)
-            loss = model.loss(logits, train_y_batch)
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer = model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+	num_batches = int(num_inputs/model.batch_size)
+	for i in range(num_batches):
+		batch = train_inputs[i*model.batch_size:(i+1)*model.batch_size]
+		with tf.GradientTape() as tape:
+			logits, _ = model.call(batch)
+			mask = tf.not_equal(decoder_input, eng_padding_index)
+			loss = model.loss_function(logits, labels, mask)
+		gradients = tape.gradient(loss, model.trainable_variables)
+		optimizer = model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
 def test(model, test_inputs, test_labels):
     """
