@@ -72,14 +72,14 @@ def read_data(file_path, language):
     """
     data = []
     with open(file_path) as data_file:
-		for line in data_file: 
+	for line in data_file: 
             sentence = line.strip().split(' ')
             # append start and stop tokens to target sentence
             if language == 'target':
                 sentence = [START_TOKEN] + sentence + [STOP_TOKEN]
             data.append(sentence)
-            
-	return data
+	
+    return data
 
 def read_data_nlg(file_path):
     """
@@ -96,7 +96,7 @@ def read_data_nlg(file_path):
     target = []
     prevLine = None
     with open(file_path) as data_file:
-		for line in data_file: 
+	for line in data_file: 
             if prevLine != None:
                 sentence = line.strip().replace("\n", "").split(' ')
                 i = 0
@@ -115,13 +115,18 @@ def read_data_nlg(file_path):
                 if speaker not in speakers:
                     speakers.append(speaker)
                 prevLine = sent
-            sentence = line.strip().split(' ')
-            # append start and stop tokens to target sentence
-            if language == 'target':
-                sentence = [START_TOKEN] + sentence + [STOP_TOKEN]
-            data.append(sentence)
-            
-	return speakers, source, target
+		
+    return speakers, source, target
+
+def build_char2id():
+	char_list = list("""ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789,;.!?:'\"/\\|_@#$%^&*~`+-=<>()[]""")
+	char2id = {c: i for i, c in enumerate(char_list), start=4)}
+	char2id[PAD_TOKEN] = 0
+	char2id[START_TOKEN] = 1
+	char2id[STOP_TOKEN] = 2
+	char2id[UNK_TOKEN] = 3
+	
+	return char2id
 
 # reads .csv files and converts them into text files
 def csv2txt (csv_file):
@@ -135,11 +140,11 @@ def build_vocab(sentences):
 	"""
 	FROM HW 4
 
-  Builds vocab from list of sentences
+	Builds vocab from list of sentences
 
 	:param sentences:  list of sentences, each a list of words
 	:return: tuple of (dictionary: word --> unique index, pad_token_idx)
-  """
+	"""
 	tokens = []
 	for s in sentences: tokens.extend(s)
 	all_words = sorted(list(set([STOP_TOKEN,PAD_TOKEN,UNK_TOKEN] + tokens)))
@@ -152,12 +157,12 @@ def convert_to_id(vocab, sentences):
 	"""
 	FROM HW 4
 
-  Convert sentences to indexed
+	Convert sentences to indexed
 
 	:param vocab:  dictionary, word --> unique index
 	:param sentences:  list of lists of words, each representing padded sentence
 	:return: numpy array of integers, with each row representing the word indeces in the corresponding sentences
-  """
+	"""
 	return np.stack([[vocab[word] if word in vocab else vocab[UNK_TOKEN] for word in sentence] for sentence in sentences])
 
 def get_data(train_file):
@@ -177,9 +182,9 @@ def get_data(train_file):
 
     with open(train_file) as train_text:
         train_data = train_text.read().split()
-        vocabulary = {w: i for i, w in enumerate(list(set(train_data)))}
+        word2id = {w: i for i, w in enumerate(list(set(train_data)), start=1)}
     
-    train = [vocabulary[w] for w in train_data]
+    train = [word2id[w] for w in train_data]
     # return tuple of training tokens, testing tokens, and the vocab dictionary.
 
-    return train, vocabulary
+    return train, word2id
