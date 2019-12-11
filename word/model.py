@@ -11,7 +11,7 @@ class RNN_WORD_Model(tf.keras.Model):
     """
 
     def __init__(self, vocab_size):
-        super(Model, self).__init__()
+        super(RNN_WORD_Model, self).__init__()
         
         # initialize hyperparamters
 
