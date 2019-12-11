@@ -74,8 +74,9 @@ def get_batch(source, i):
     target = source[i+1:i+1+seq_len].view(-1)
     return data, target
 
-def train(model):
+def train(model, train_data):
     """
+    Trains the model for one epoch.
     """
     curr_loss = 0
     step = 0
