@@ -34,7 +34,7 @@ class RNN_WORD_Model(tf.keras.Model):
 
         
 
-    def forward(self, input, hidden):
+    def call(self, input, hidden):
         emb = self.dropout(self.encoder(input))
         output, hidden1, hidden2 = self.LSTM(emb, hidden)
         output = self.drop(output)
