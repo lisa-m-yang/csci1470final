@@ -1,14 +1,11 @@
-
-
 import numpy as np
 import tensorflow as tf
 import argparse
 from tensorflow.keras import Model
 import preprocess
-import os.path
 
 
-parser = argparse.ArgumentParser(description='Tensorflow Wikitext-2 RNN/LSTM Language Model')
+parser = argparse.ArgumentParser(description='RNN Language Model')
 parser.add_argument('--data', type=str, default='./data',
                     help='location of the data corpus')
 parser.add_argument('--model', type=str, default='LSTM',
@@ -43,7 +40,7 @@ parser.add_argument('--save', type=str, default='model.pt',
                     help='path to save the final model')
 parser.add_argument('--onnx-export', type=str, default='',
                     help='path to export the final model in onnx format')
-                    
+
 args = parser.parse_args()
 
 ###############################################################################
@@ -99,7 +96,7 @@ def train(model):
     hidden = model.init_hidden(args.batch_size)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i)
-        hidden = repackage_hidden(hidden) 
+        hidden = repackage_hidden(hidden)
         with tf.GradientTape() as tape:
             output, hidden = model(data, hidden)
             loss = criterion(prbs=output, labels=targets)
@@ -113,11 +110,19 @@ def export(path, batch_size, seq_len):
 	hidden = model.init_hidden(batch_size)
 	# TODO: write model, input_holder, hidden to a path for exporting
 
+def main():
+    NAME_IDX = 5
+    data_file = '../data/the_office/the_office_scripts.csv'
 
+    num_lines = get_num_lines(data_file)
+    data = get_data(data_file, num_lines)
+    train_names = data[:int(0.8 * length)]
+    valid_names = data[int(0.8 * length):int(0.9 * length)]
+    test_names = data[int(0.9 * length):]
+    vocab = build_vocab(data)
+    train_ids = convert_to_id(vocab, train_names)
+    valid_ids = convert_to_id(vocab, valid_names)
+    test_ids = convert_to_id(vocab, test_names)
 
-
-    
-            
-    
-
-    
+if __name__ == '__main__':
+    main()
