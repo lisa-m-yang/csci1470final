@@ -3,8 +3,9 @@
 import numpy as np
 import tensorflow as tf
 import argparse
-
-import word_preprocess
+from tensorflow.keras import Model
+import preprocess
+import os.path
 
 
 parser = argparse.ArgumentParser(description='Tensorflow Wikitext-2 RNN/LSTM Language Model')
@@ -71,6 +72,7 @@ test_data = batchify(corpus.test, eval_batch_size)
 
 ntokens = len(corpus.dictionary)
 model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied).to(device)
+
 criterion = tf.keras.losses.BinaryCrossentropy()
 
 def repackage_hidden(h):
@@ -105,6 +107,16 @@ def train(model):
 	model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         total_loss += loss
 	step += 1
+
+def export(path, batch_size, seq_len):
+	input_holder = tf.zeros(seq_len * batch_size)
+	hidden = model.init_hidden(batch_size)
+	# TODO: write model, input_holder, hidden to a path for exporting
+
+
+
+
+    
             
     
 
