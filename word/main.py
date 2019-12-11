@@ -33,21 +33,7 @@ args = parser.parse_args()
 # Load data and batch.
 ###############################################################################
 
-corpus = word_preprocess.Corpus(args.data)
-
-def batchify (data, bsz):
-    # find how many batches we have
-    nbatch = data.size(0) // bsz
-    # find remainder, trim ends
-    data = data.narrow(0, 0, nbatch * bsz)
-    # Evenly divide the data across the bsz batches.
-    data = data.view(bsz, -1).t().contiguous()
-    return data
-
-eval_batch_size = 10
-train_data = batchify(corpus.train, args.batch_size)
-val_data = batchify(corpus.valid, eval_batch_size)
-test_data = batchify(corpus.test, eval_batch_size)
+corpus = preprocess.Corpus(args.data)
 
 ###############################################################################
 # Build the model: define token length, initialize model, define loss.
