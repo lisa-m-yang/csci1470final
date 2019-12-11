@@ -46,9 +46,67 @@ parser.add_argument('--onnx-export', type=str, default='',
 args = parser.parse_args()
 
 ###############################################################################
-# Load data
+# Load data and batch.
 ###############################################################################
 
 corpus = word_preprocess.Corpus(args.data)
 
 def batchify (data, bsz):
+    # find how many batches we have
+    nbatch = data.size(0) // bsz
+    # find remainder, trim ends
+    data = data.narrow(0, 0, nbatch * bsz)
+    # Evenly divide the data across the bsz batches.
+    data = data.view(bsz, -1).t().contiguous()
+    return data
+
+eval_batch_size = 10
+train_data = batchify(corpus.train, args.batch_size)
+val_data = batchify(corpus.valid, eval_batch_size)
+test_data = batchify(corpus.test, eval_batch_size)
+
+###############################################################################
+# Build the model: define token length, initialize model, define loss.
+###############################################################################
+
+ntokens = len(corpus.dictionary)
+model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied).to(device)
+
+criterion = tf.keras.losses.BinaryCrossentropy()
+
+def repackage_hidden(h):
+    """
+    Wraps hidden states in new Tensors to detach them from history.
+    """
+    if isinstance(h, tf.tensor):
+        # unsure
+        return h.detach()
+    else:
+        return tuple(repackage_hidden(v) for v in h)
+
+def get_batch(source, i):
+    seq_len = min(args.bptt, len(source) - 1 - i)
+    data = source[i:i+seq_len]
+    target = source[i+1:i+1+seq_len].view(-1)
+    return data, target
+
+def train(model):
+    """
+    """
+    curr_loss = 0
+    step = 0
+    hidden = model.init_hidden(args.batch_size)
+    for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
+        data, targets = get_batch(train_data, i)
+        hidden = repackage_hidden(hidden) 
+        with tf.GradientTape() as tape:
+            output, hidden = model(data, hidden)
+            loss = criterion(prbs=output, labels=targets)
+        gradients = tape.gradient(loss, model.trainable_variables)
+	model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        total_loss += loss
+	step += 1
+            
+    
+
+    
