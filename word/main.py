@@ -56,23 +56,7 @@ test_data = batchify(corpus.test, eval_batch_size)
 ntokens = len(corpus.dictionary)
 model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied).to(device)
 
-criterion = tf.keras.losses.BinaryCrossentropy()
-
-def repackage_hidden(h):
-    """
-    Wraps hidden states in new Tensors to detach them from history.
-    """
-    if isinstance(h, tf.tensor):
-        # unsure
-        return h.detach()
-    else:
-        return tuple(repackage_hidden(v) for v in h)
-
-def get_batch(source, i):
-    seq_len = min(args.bptt, len(source) - 1 - i)
-    data = source[i:i+seq_len]
-    target = source[i+1:i+1+seq_len].view(-1)
-    return data, target
+loss_function = tf.keras.losses.BinaryCrossentropy()
 
 def train(model, train_data):
     """
@@ -86,7 +70,7 @@ def train(model, train_data):
         hidden = repackage_hidden(hidden)
         with tf.GradientTape() as tape:
             output, hidden = model(data, hidden)
-            loss = criterion(prbs=output, labels=targets)
+            loss = loss_function(prbs=output, labels=targets)
         gradients = tape.gradient(loss, model.trainable_variables)
 	model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         total_loss += loss
