@@ -61,6 +61,40 @@ def train(model, train_data):
 	model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
         total_loss += loss
 	step += 1
+	
+def test(model, test_data):
+	"""
+	Runs through one epoch - all testing examples.
+
+	
+	:returns: perplexity of the test set, per symbol accuracy on test set
+	"""
+
+	# Note: Follow the same procedure as in train() to construct batches of data!
+
+	curr_loss=0
+	step = 0
+	perplexity = 0
+	per_symbol_accuracy = 0
+	hidden = model.init_hidden(args.batch_size)
+
+	for start, end in zip(range(0, len(test_data), args.batch_size),
+						  range(args.batch_size, len(test_data),
+								args.batch_size)):
+
+
+		with tf.GradientTape() as tape:
+			prbs = model(encoder_input=test_french2, decoder_input=test_english2)
+			loss = loss_function(prbs=prbs, labels=test_labels2, mask=mask)
+			# print("Loss", loss/model.batch_size, step)
+			curr_loss += loss
+		perplexity = tf.math.exp((curr_loss / (step * sum_mask)))
+		per_symbol_accuracy = sum_mask * model.accuracy_function(prbs, test_labels2, mask)
+		step += 1
+
+
+
+	return perplexity, per_symbol_accuracy
 
 def export(path, batch_size, seq_len):
 	input_holder = tf.zeros(seq_len * batch_size)
