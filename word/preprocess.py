@@ -2,6 +2,12 @@ import numpy as np
 from io import open
 
 def get_num_lines(input_file):
+    """
+    Calculate the number of lines in CSV file
+
+	:param input_file:  file path for CSV
+	:return: num_lines:  the number of lines in the CSV
+    """
     with open(input_file, encoding='ISO-8859-1') as input:
         reader = csv.reader(input)
         next(reader)
@@ -9,18 +15,38 @@ def get_num_lines(input_file):
 
     return num_lines
 
-def get_data(input_file, num_lines):
+def get_data(input_file, idx, num_lines):
+    """
+    Get the data of a column in CSV file
+
+	:param input_file:  file path for CSV
+    :param idx:  index for the column in CSV
+    :param num_lines:  the number of lines in the CSV
+	:return: data:  an array containing the column data
+    """
     with open(input_file, encoding='ISO-8859-1') as input:
         reader = csv.reader(input)
         next(reader)
 
-        data = [row[NAME_IDX].strip() for i, row in enumerate(reader)]
+        data = [row[idx].strip() for i, row in enumerate(reader)]
 
     return data
 
+def split_data(data):
+    """
+    Split all data into train, valid, test data
+
+	:param data:  array containing all the data
+	:return: train, valid, test:  a tuple of data for train, valid, test
+    """
+    train = data[:int(0.8 * length)]
+    valid = data[int(0.8 * length):int(0.9 * length)]
+    test = data[int(0.9 * length):]
+
+    return train, valid, test
+
 def build_vocab(names):
 	"""
-
     Builds vocab from list of words
 
 	:param names:  list of words, each a name
@@ -34,7 +60,6 @@ def build_vocab(names):
 
 def convert_to_id(vocab, names):
 	"""
-
     Convert names to indexed
 
 	:param vocab:  dictionary, word --> unique index
