@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import argparse
 from tensorflow.keras import Model
-import preprocess
+from preprocess import get_num_lines, get_data, split_data, build_vocab, convert_to_id
 from model import RNN_WORD_Model
 
 
@@ -53,13 +53,13 @@ def test(model, test_data):
 
 def main():
     NAME_IDX = 5
-    data_file = '../data/the_office/the_office_scripts.csv'
+    data_file = '../data/the_office_scripts.csv'
 
     length = get_num_lines(data_file)
     data_names = get_data(data_file, NAME_IDX, length)
-    vocab = build_vocab(data)
+    vocab = build_vocab(data_names)
     data_ids = convert_to_id(vocab, data_names)
-    train_data, valid_data, test_data = split_data(data_ids)
+    train_data, valid_data, test_data = split_data(data_ids, length)
 
     num_tokens = len(vocab)
     model = RNN_WORD_Model(num_tokens)

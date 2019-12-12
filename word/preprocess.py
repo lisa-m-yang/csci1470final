@@ -1,3 +1,4 @@
+import csv
 import numpy as np
 from io import open
 
@@ -32,11 +33,12 @@ def get_data(input_file, idx, num_lines):
 
     return data
 
-def split_data(data):
+def split_data(data, length):
     """
     Split all data into train, valid, test data
 
 	:param data:  array containing all the data
+    :param length:  length of data
 	:return: train, valid, test:  a tuple of data for train, valid, test
     """
     train = data[:int(0.8 * length)]
@@ -66,4 +68,4 @@ def convert_to_id(vocab, names):
 	:param names:  lists of words, each representing a name
 	:return: numpy array of integers, with each representing the word indeces in the corresponding names
     """
-	return np.stack([vocab[word] if word in vocab for name in names])
+	return np.stack([vocab[name] for name in names if name in vocab])
