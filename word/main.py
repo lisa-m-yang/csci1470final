@@ -22,20 +22,20 @@ def train(model, train_data):
         optimizer = model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
 def test(model, test_data):
-	"""
-	Runs through one epoch - all testing examples.
+    """
+    Runs through one epoch - all testing examples.
 
-	:returns: perplexity of the test set
-	"""
+    :returns: perplexity of the test set
+    """
     total_loss = 0
     length = len(test_data)
-	num_batches = int(length/model.batch_size)
+    num_batches = int(length/model.batch_size)
     hidden = model.init_hidden()
-	for i in range(num_batches):
-		data = test_data[i*model.batch_size:(i+1)*model.batch_size]
+    for i in range(num_batches):
+        data = test_data[i*model.batch_size:(i+1)*model.batch_size]
         targets = test_data[i*model.batch_size+1:(i+1)*model.batch_size+1]
-		output, hidden = model.call(data, hidden)
-		total_loss = model.loss_function(output, targets)
+        output, hidden = model.call(data, hidden)
+        total_loss = model.loss_function(output, targets)
     perplexity = np.exp(total_loss/num_batches)
 
     return perplexity
