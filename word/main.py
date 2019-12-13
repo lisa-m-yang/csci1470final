@@ -10,10 +10,10 @@ def train(model, train_data):
     Trains the model for one epoch.
     """
     length = len(train_data)
-	num_batches = int(length/model.batch_size)
+    num_batches = int(length/model.batch_size)
     hidden = model.init_hidden()
-	for i in range(num_batches):
-		data = train_data[i*model.batch_size:(i+1)*model.batch_size]
+    for i in range(num_batches):
+        data = train_data[i*model.batch_size:(i+1)*model.batch_size]
         targets = train_data[i*model.batch_size+1:(i+1)*model.batch_size+1]
 		with tf.GradientTape() as tape:
 			output, hidden = model.call(data, hidden)
