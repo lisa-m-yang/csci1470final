@@ -15,11 +15,11 @@ def train(model, train_data):
     for i in range(num_batches):
         data = train_data[i*model.batch_size:(i+1)*model.batch_size]
         targets = train_data[i*model.batch_size+1:(i+1)*model.batch_size+1]
-		with tf.GradientTape() as tape:
-			output, hidden = model.call(data, hidden)
-			loss = model.loss_function(output, targets)
-		gradients = tape.gradient(loss, model.trainable_variables)
-		optimizer = model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+        with tf.GradientTape() as tape:
+            output, hidden = model.call(data, hidden)
+            loss = model.loss_function(output, targets)
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer = model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
 def test(model, test_data):
 	"""
