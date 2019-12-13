@@ -16,39 +16,37 @@ class RNN_WORD_Model(tf.keras.Model):
         # initialize hyperparamters
 
         self.vocab_size = vocab_size
+        self.dropout = 0.2
         self.window_size = 20
         self.embedding_size = 650
+        self.hidden_size = 650
         self.batch_size = 20
-        self.rnn_size = 256
-        self.nlayer = 2
-        self.nhid = 200
 
-        self.dropout = tf.keras.layers.Dropout(0.2)
+        self.dropout = tf.keras.layers.Dropout(self.drouput)
         self.encoder = tf.keras.layers.Embedding(self.vocab_size, self.embedding_size, input_length=self.window_size)
+        self.RNN1 = tf.keras.layers.LSTM(self.hidden_size, dropout=self.dropout, return_sequences=True, return_state=True)
+        self.RNN2 = tf.keras.layers.LSTM(self.hidden_size, dropout=self.dropout)
+        self.RNN = tf.keras.layers.RNN(cells)(inputs)
+        self.decoder = tf.keras.layers.Dense(self.vocab_size, activation='softmax', kernel_initializer='random uniform')
 
-        self.LSTM = tf.keras.layers.LSTM(self.rnn_size, return_sequences=True, return_state=True)
-        self.decoder = tf.keras.layers.Dense(self.vocab_size, activation='softmax', kernel_initializer='random uniform') #[hiddensz, vocabsz]
-        # how to set min and max -.1/.1 within initializer?
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
 
-        loss_function = tf.keras.losses.BinaryCrossentropy()
+        self.loss_function = tf.keras.losses.BinaryCrossentropy()
 
 
     def call(self, input, hidden):
 
         emb = self.dropout(self.encoder(input))
-        output, hidden1, hidden2 = self.LSTM(emb, hidden)
-        output = self.drop(output)
+        output, hidden1, hidden2 = self.RNN1(emb, initial_state=hidden)
+		output, hidden1, hidden2 = self.RNN2(emb, initial_state=(hidden1, hidden2))
+        output = self.dropout(output)
         decoded = self.decoder(output)
 
         return decoded, (hidden1, hidden2)
 
-
-    def init_hidden(self, bsz):
+    def init_hidden(self):
 		"""
 		Return a Variable filled with zeros based on the data shape.
 		"""
-        hidden = (tf.zeros_like(self.nlayers, self.batch_size, self.nhid),
-		tf.zeros_like(self.nlayers, self.batch_size, self.nhid))
 
-        return hidden
+        return (tf.zeros_like(2, self.batch_size, self.hidden_size), tf.zeros_like(2, self.batch_size, self.hidden_size))

@@ -39,13 +39,12 @@ def split_data(data, length):
 
 	:param data:  array containing all the data
     :param length:  length of data
-	:return: train, valid, test:  a tuple of data for train, valid, test
+	:return: train, test:  a tuple of data for train and test
     """
     train = data[:int(0.8 * length)]
-    valid = data[int(0.8 * length):int(0.9 * length)]
-    test = data[int(0.9 * length):]
+    test = data[int(0.8 * length):]
 
-    return train, valid, test
+    return train, test
 
 def build_vocab(names):
 	"""
